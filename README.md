@@ -1,0 +1,1 @@
+![.NET Regression Tests](https://github.com/Wotirr/LabWork10/actions/workflows/autotests.yml/badge.svg)](https://github.com/Wotirr/LabWork10/actions/workflows/autotests.yml)
