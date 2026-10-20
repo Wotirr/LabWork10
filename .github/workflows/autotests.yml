@@ -1,0 +1,60 @@
+name: .NET Regression Tests
+
+on:
+push:
+branches: [ "master" ]
+paths:
+- '**.cs'
+pull_request:
+branches: [ "master" ]
+paths:
+- '**.cs'
+
+jobs:
+build-and-test:
+runs-on: ubuntu-latest
+
+steps:
+- name: Checkout repository
+uses: actions/checkout@v4
+
+- name: Setup .NET
+uses: actions/setup-dotnet@v4
+with:
+dotnet-version: '10.0.x'
+
+- name: Restore dependencies
+run: dotnet restore
+
+- name: Build solution
+run: dotnet build --no-restore --configuration Release
+
+- name: Run tests and generate TRX log
+run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test_results.trx" --collect:"XPlat Code Coverage"
+
+- name: Test Report
+uses: dorny/test-reporter@v2
+if: success() || failure()
+with:
+name: Test results
+path: "**/*.trx"
+reporter: dotnet-trx
+
+- name: ReportGenerator
+uses: danielpalme/ReportGenerator-GitHub-Action@5
+if: success() || failure()
+with:
+reports: "**/coverage.cobertura.xml"
+targetdir: "coveragereport"
+reporttypes: "Html;MarkdownSummaryGithub"
+
+- name: Coverage summary
+if: success() || failure()
+run: cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: success() || failure()
+        with:
+          name: coverage-report
+          path: coveragereport
